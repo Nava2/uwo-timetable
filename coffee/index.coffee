@@ -2,9 +2,6 @@ window.$ ?= jQuery
 
 window._ ?= underscore
 
-a = Util.SimpleTime(2, 30, false)
-b = Util.SimpleTime(12, 30, false)
-
 substringMatcher = (depts) ->
 	(q, cb) -> 		 
 		# an array that will be populated with substring matches
@@ -51,7 +48,12 @@ class Schedule
 
 			console.log "Setting id=#{id} w/ span: #{rows}"
 
-			$("##{id}").attr('rowspan', rows).css('background-color', 'red')
+			cell = $("##{id}")
+			cell.attr('rowspan', rows).css({'background-color': 'red', 'font-size': '10px'})
+			div = $(cell).$div()
+			div.$h5("#{component.class.courseCode}")
+			div.$p("#{component.type} #{component.section}")
+
 
 		undefined
 
