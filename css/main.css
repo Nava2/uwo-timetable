@@ -4,19 +4,13 @@
    Author's custom styles
    ========================================================================== */
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+.table{
+  border-collapse: separate;
+  border-spacing: 0;
+}
+.class {
+  border: 1px solid black;
+  border-radius: 5px;
+  -moz-border-radius: 5px;
+  padding: 5px;
+}

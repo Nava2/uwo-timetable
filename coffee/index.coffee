@@ -3,26 +3,26 @@ window.$ ?= jQuery
 window._ ?= underscore
 
 substringMatcher = (depts) ->
-	(q, cb) -> 		 
+	(q, cb) ->
 		# an array that will be populated with substring matches
 		matches = [];
-	 
+
 		# regex used to determine if a string contains the substring `q`
 		substrRegex = new RegExp(q, 'i');
-		 
+
 		# iterate through the pool of strings and for any string that
 		# contains the substring `q`, add it to the `matches` array
-		for d, i in depts 
-			if substrRegex.test(d.total) 
+		for d, i in depts
+			if substrRegex.test(d.total)
 				# the typeahead jQuery plugin expects suggestions to a
 				# JavaScript object, refer to typeahead docs for more info
-				matches.push d 
-		 
+				matches.push d
+
 		cb matches
 
 class Schedule
-			
-	constructor: -> 
+
+	constructor: ->
 
 		@_timetable = {}
 		ttable = @_timetable
@@ -33,7 +33,7 @@ class Schedule
 			)
 
 	addClass: (component) ->
-		for time in component.times 
+		for time in component.times
 
 			console.log "working with:", time
 
@@ -50,6 +50,7 @@ class Schedule
 
 			cell = $("##{id}")
 			cell.attr('rowspan', rows).css({'background-color': 'red', 'font-size': '10px'})
+			cell.addClass('class')
 			div = $(cell).$div()
 			div.$h5("#{component.class.courseCode}")
 			div.$p("#{component.type} #{component.section}")
@@ -59,38 +60,38 @@ class Schedule
 
 ## global schedule
 schedule = new Schedule
-	 
-loadClassSelector = -> 
+
+loadClassSelector = ->
 	# get the deparment data
 	departments = []
-	TimetableCreator.fetchDepartments((data) -> 
-		for d in data 
+	TimetableCreator.fetchDepartments((data) ->
+		for d in data
 			departments.push d
 		)
 
 	( ->
 		currentClasses = null
 
-		selected = 
+		selected =
 			class 	: ->
 				courseCode = $("#classSelect option:selected")?.val()
 				if courseCode?
 					_.findWhere(currentClasses, {courseCode: courseCode})
-				else 
+				else
 					null
 
 			lecture : ->
 				lectureSection = $("#lectureSelect option:selected")?.val()
 				if lectureSection?
 					_.findWhere(this.class().getLectures(), {section: lectureSection})
-				else 
+				else
 					null
 
 			extra 	: ->
 				extraSection = $("#extraSelect option:selected")?.val()
 				if extraSection?
 					_.findWhere(this.class().getExtras(), {section: extraSection})
-				else 
+				else
 					null
 
 
@@ -129,7 +130,7 @@ loadClassSelector = ->
 
 			lectures = $("#lectureSelect")
 			extras = $("#extraSelect")
-			
+
 			for sel in [lectures, extras]
 				sel.find('option')
 					.remove()
@@ -146,19 +147,19 @@ loadClassSelector = ->
 
 			lectures.prop('disabled', false)
 
-		$("#lectureSelect").change (event) -> 
+		$("#lectureSelect").change (event) ->
 			schedule.addClass selected.lecture()
 
 		$("#extraSelect").change (event) ->
 			schedule.addClass selected.extra()
-			
 
-		
+
+
 	)()
 
 
 
-loadTables = -> 
+loadTables = ->
 	headers = ["", "Mon", "Tue", "Wed", "Thu", "Fri"]
 
 	## build the tables
@@ -169,7 +170,7 @@ loadTables = ->
 
 		# build the header row
 		headRow = table.$thead().$tr()
-		for header in headers 
+		for header in headers
 			headRow.$th(header, {})
 
 		body = table.$tbody()
