@@ -1,6 +1,6 @@
 window.$ ?= jQuery
 
-window._ ?= underscore
+window._ ?= lodash
 
 substringMatcher = (depts) ->
 	(q, cb) ->
@@ -20,6 +20,42 @@ substringMatcher = (depts) ->
 
 		cb matches
 
+cellColours = [
+		{ 
+			back: 'rgb(0, 191, 127)'
+			border: 'rgb(0, 127, 85)'
+		},
+		{
+			back: 'rgb(191, 181, 0)' 
+			border: 'rgb(127, 121, 0)'
+		},
+		{
+			back: 'rgb(191, 126, 0)' 
+			border: 'rgb(127, 84, 0)'
+		},
+		{
+			back: 'rgb(191, 67, 51)' 
+			border: 'rgb(127, 45, 34)'
+		},
+		{
+			back: 'rgb(191, 34, 163)' 
+			border: 'rgb(127, 23, 108)'
+		},
+		{
+			back: 'rgb(191, 126, 0)', 
+			border: 'rgb(127, 84, 0)'
+		},
+		{
+			back: 'rgb(111, 37, 191)', 
+			border: 'rgb(74, 25, 127)'
+		},
+		{
+			back: 'rgb(35, 83, 191)', 
+			border: 'rgb(23, 55, 127)'
+		}
+
+	]
+
 class Schedule
 
 	constructor: ->
@@ -33,7 +69,9 @@ class Schedule
 			)
 
 	addClass: (component) ->
-		for time in component.times
+		cellColour = cellColours[Math.floor(Math.random()*cellColours.length)]
+			
+		for time in component.times 
 
 			console.log "working with:", time
 
@@ -49,9 +87,15 @@ class Schedule
 			console.log "Setting id=#{id} w/ span: #{rows}"
 
 			cell = $("##{id}")
-			cell.attr('rowspan', rows).css({'background-color': 'red', 'font-size': '10px'})
+			cell.attr('rowspan', rows)
 			cell.addClass('class')
+			cell.css(
+				'border-color' 		: cellColour.border
+				'background-color'	: cellColour.back
+				)
+
 			div = $(cell).$div()
+			
 			div.$h5("#{component.class.courseCode}")
 			div.$p("#{component.type} #{component.section}")
 
@@ -70,13 +114,11 @@ loadClassSelector = ->
 		)
 
 	( ->
-		currentClasses = null
-
 		selected =
 			class 	: ->
 				courseCode = $("#classSelect option:selected")?.val()
 				if courseCode?
-					_.findWhere(currentClasses, {courseCode: courseCode})
+					courseCache.get courseCode
 				else
 					null
 
@@ -94,6 +136,7 @@ loadClassSelector = ->
 				else
 					null
 
+		courseCache = new LRUCache 5
 
 		$("#classDept").typeahead({
 				hint 		: true
@@ -114,15 +157,21 @@ loadClassSelector = ->
 				    .end() # clear all the options
 				select.prop('disabled', true)
 
-				TimetableCreator.fetchClasses(selected.value, (classes) ->
-					## have all the current classes
-					for clazz in classes
+				currentClasses = courseCache.get selected.value 
+
+				if !currentClasses?
+					TimetableCreator.fetchClasses(selected.value, (classes) ->
+						select.prop('disabled', false)
+
+						currentClasses = classes
+					)
+
+					courseCache.insert selected.value, currentClasses
+
+					for clazz in currentClasses
 						$(select).$option(clazz.fullTitle, {value : clazz.courseCode})
 
-					select.prop('disabled', false)
-
-					currentClasses = classes
-				)
+				
 			)
 
 		$("#classSelect").change (event) ->
@@ -180,6 +229,8 @@ loadTables = ->
 					$("##{termStr}_t#{hour}#{min}").$td({
 						id: "#{termStr}_t#{hour}#{min}_#{day}"
 					})
+					
+
 				, (hour, min) ->
 					# write the rows of the table:
 					tr = body.$tr({id: "#{termStr}_t#{hour}#{min}"})
@@ -187,6 +238,7 @@ loadTables = ->
 						id: "#{termStr}_t#{hour}#{min}"
 					})
 			)
+
 
 jQuery ->
 	loadTables()

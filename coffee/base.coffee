@@ -2,7 +2,7 @@ window.TimetableCreator ?= {}
 
 window.$ ?= jQuery
 
-window._ ?= underscore
+window._ ?= lodash
 
 class TimetableCreator.TimetableQuery 
 
@@ -16,7 +16,7 @@ class TimetableCreator.ClassInstance
 			
 		chunks = @fullTitle.match(_titleReg)
 		@courseCode = chunks[1]
-		@term = chunks[1] in "AFYZ"
+		@term = if chunks[2] in "AFY" then 0 else 1
 		@title = chunks[3]
 
 		#helper function
