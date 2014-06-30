@@ -1,5 +1,5 @@
 (function() {
-  var Schedule, a, b, loadClassSelector, loadTables, schedule, substringMatcher, _ref, _ref1,
+  var Schedule, cellColours, loadClassSelector, loadTables, schedule, substringMatcher, _ref, _ref1,
     __hasProp = {}.hasOwnProperty;
 
   if ((_ref = window.$) == null) {
@@ -7,12 +7,8 @@
   }
 
   if ((_ref1 = window._) == null) {
-    window._ = underscore;
+    window._ = lodash;
   }
-
-  a = Util.SimpleTime(2, 30, false);
-
-  b = Util.SimpleTime(12, 30, false);
 
   substringMatcher = function(depts) {
     return function(q, cb) {
@@ -28,6 +24,34 @@
       return cb(matches);
     };
   };
+
+  cellColours = [
+    {
+      back: 'rgb(0, 191, 127)',
+      border: 'rgb(0, 127, 85)'
+    }, {
+      back: 'rgb(191, 181, 0)',
+      border: 'rgb(127, 121, 0)'
+    }, {
+      back: 'rgb(191, 126, 0)',
+      border: 'rgb(127, 84, 0)'
+    }, {
+      back: 'rgb(191, 67, 51)',
+      border: 'rgb(127, 45, 34)'
+    }, {
+      back: 'rgb(191, 34, 163)',
+      border: 'rgb(127, 23, 108)'
+    }, {
+      back: 'rgb(191, 126, 0)',
+      border: 'rgb(127, 84, 0)'
+    }, {
+      back: 'rgb(111, 37, 191)',
+      border: 'rgb(74, 25, 127)'
+    }, {
+      back: 'rgb(35, 83, 191)',
+      border: 'rgb(23, 55, 127)'
+    }
+  ];
 
   Schedule = (function() {
 
@@ -47,7 +71,8 @@
     }
 
     Schedule.prototype.addClass = function(component) {
-      var id, rows, start, time, _i, _len, _ref2;
+      var cell, cellColour, div, id, rows, start, time, _i, _len, _ref2;
+      cellColour = cellColours[Math.floor(Math.random() * cellColours.length)];
       _ref2 = component.times;
       for (_i = 0, _len = _ref2.length; _i < _len; _i++) {
         time = _ref2[_i];
@@ -59,7 +84,16 @@
         start = time.startTime;
         id = Util.scheduleCellId(time["class"].term, time.day, start.hour, start.minute);
         console.log("Setting id=" + id + " w/ span: " + rows);
-        $("#" + id).attr('rowspan', rows).css('background-color', 'red');
+        cell = $("#" + id);
+        cell.attr('rowspan', rows);
+        cell.addClass('class');
+        cell.css({
+          'border-color': cellColour.border,
+          'background-color': cellColour.back
+        });
+        div = $(cell).$div();
+        div.$h5("" + component["class"].courseCode);
+        div.$p("" + component.type + " " + component.section);
       }
       return void 0;
     };
@@ -83,18 +117,26 @@
       return _results;
     });
     return (function() {
-      var currentClasses, selected;
-      currentClasses = null;
+      var courseCache, selected;
       selected = {
+        dept: (function() {
+          var _reg;
+          _reg = /([A-Z]+)\s+\-\s+/;
+          return function() {
+            var groups, _ref2;
+            groups = (_ref2 = $("#classDept")) != null ? _ref2.val().match(_reg) : void 0;
+            return groups[1];
+          };
+        })(),
         "class": function() {
-          var courseCode, _ref2;
+          var courseCode, dept, _ref2;
           courseCode = (_ref2 = $("#classSelect option:selected")) != null ? _ref2.val() : void 0;
+          dept = this.dept();
+          console.Log("department = " + dept);
           if (courseCode != null) {
-            return _.findWhere(currentClasses, {
+            return _.findWhere(courseCache.get(this.dept()), {
               courseCode: courseCode
             });
-          } else {
-            return null;
           }
         },
         lecture: function() {
@@ -120,6 +162,14 @@
           }
         }
       };
+      courseCache = new Util.LRUCache(5, function(deptCode) {
+        var currentClasses;
+        currentClasses = [];
+        TimetableCreator.fetchClasses(deptCode, function(classes) {
+          return currentClasses = classes;
+        });
+        return currentClasses;
+      });
       $("#classDept").typeahead({
         hint: true,
         highlight: true,
@@ -129,24 +179,21 @@
         displayKey: "total",
         source: substringMatcher(departments)
       }).bind('typeahead:selected', function(obj, selected, name) {
-        var select;
+        var clazz, currentClasses, select, _i, _len;
         if (selected == null) {
           console.error("selected invalid dept: " + selected + ", " + name);
         }
         select = $("#classSelect");
         select.find('option').remove().end();
         select.prop('disabled', true);
-        return TimetableCreator.fetchClasses(selected.value, function(classes) {
-          var clazz, _i, _len;
-          for (_i = 0, _len = classes.length; _i < _len; _i++) {
-            clazz = classes[_i];
-            $(select).$option(clazz.fullTitle, {
-              value: clazz.courseCode
-            });
-          }
-          select.prop('disabled', false);
-          return currentClasses = classes;
-        });
+        currentClasses = courseCache.get(selected.value);
+        for (_i = 0, _len = currentClasses.length; _i < _len; _i++) {
+          clazz = currentClasses[_i];
+          $(select).$option(clazz.fullTitle, {
+            value: clazz.courseCode
+          });
+        }
+        return select.prop('disabled', false);
       });
       $("#classSelect").change(function(event) {
         var clazz, ext, extras, lectures, obj, section, sel, _i, _j, _len, _len1, _ref2, _ref3, _ref4;
@@ -191,7 +238,7 @@
   loadTables = function() {
     var body, container, headRow, header, headers, i, table, termStr, _i, _j, _len, _len1, _ref2, _results;
     headers = ["", "Mon", "Tue", "Wed", "Thu", "Fri"];
-    _ref2 = $("#term_container div");
+    _ref2 = $("#term_container > div");
     _results = [];
     for (i = _i = 0, _len = _ref2.length; _i < _len; i = ++_i) {
       container = _ref2[i];

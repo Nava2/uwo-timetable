@@ -12,7 +12,7 @@
   }
 
   if ((_ref2 = window._) == null) {
-    window._ = underscore;
+    window._ = lodash;
   }
 
   TimetableCreator.TimetableQuery = (function() {
@@ -35,7 +35,7 @@
       this.fullTitle = fullTitle;
       chunks = this.fullTitle.match(_titleReg);
       this.courseCode = chunks[1];
-      this.term = (_ref3 = chunks[1], __indexOf.call("AFYZ", _ref3) >= 0);
+      this.term = (_ref3 = chunks[2], __indexOf.call("AFY", _ref3) >= 0) ? 0 : 1;
       this.title = chunks[3];
       decodeDays = function(tableRow) {
         var i, td, _i, _len, _ref4, _results;
@@ -188,7 +188,10 @@
     yql = "select * from html \nwhere url=\"http://studentservices.uwo.ca/secure/timetables/mastertt/ttindex.cfm?subject=" + subject + "&Designation=Any&catalognbr=&CourseTime=All&Component=All&time=&end_time=&day=m&day=tu&day=w&day=th&day=f&Campus=Any&command=search\" \n	and xpath=\"//div[@class='span12']\"";
     encodedYql = encodeYql(yql);
     fullquery = "https://query.yahooapis.com/v1/public/yql?q=" + encodedYql + "&format=json&callback=";
-    return $.getJSON(fullquery, null).done(function(data) {
+    return $.ajax(fullquery, {
+      dataType: "json",
+      async: false
+    }).done(function(data) {
       var div, t;
       div = data.query.results.div;
       return withData((function() {
