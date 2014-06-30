@@ -115,12 +115,21 @@ loadClassSelector = ->
 
 	( ->
 		selected =
+
+			dept 	: ( -> 
+					# regex to pull the dept code out of the val()
+					_reg = /([A-Z]+)\s+\-\s+/
+					->
+						groups = $("#classDept")?.val().match _reg
+
+						groups[1] # first group :D
+				)()
+
 			class 	: ->
 				courseCode = $("#classSelect option:selected")?.val()
-				if courseCode?
-					courseCache.get courseCode
-				else
-					null
+				dept = this.dept()
+				console.Log "department = #{dept}"
+				_.findWhere(courseCache.get(this.dept()), courseCode : courseCode) if courseCode?
 
 			lecture : ->
 				lectureSection = $("#lectureSelect option:selected")?.val()
@@ -136,7 +145,13 @@ loadClassSelector = ->
 				else
 					null
 
-		courseCache = new LRUCache 5
+		courseCache = new Util.LRUCache 5, (deptCode) -> 
+			currentClasses = []
+			TimetableCreator.fetchClasses(deptCode, (classes) -> 
+					currentClasses = classes
+				)
+
+			currentClasses
 
 		$("#classDept").typeahead({
 				hint 		: true
@@ -158,18 +173,10 @@ loadClassSelector = ->
 				select.prop('disabled', true)
 
 				currentClasses = courseCache.get selected.value 
+				for clazz in currentClasses
+					$(select).$option(clazz.fullTitle, {value : clazz.courseCode})
 
-				if !currentClasses?
-					TimetableCreator.fetchClasses(selected.value, (classes) ->
-						select.prop('disabled', false)
-
-						currentClasses = classes
-					)
-
-					courseCache.insert selected.value, currentClasses
-
-					for clazz in currentClasses
-						$(select).$option(clazz.fullTitle, {value : clazz.courseCode})
+				select.prop('disabled', false)
 
 				
 			)
@@ -212,7 +219,7 @@ loadTables = ->
 	headers = ["", "Mon", "Tue", "Wed", "Thu", "Fri"]
 
 	## build the tables
-	for container,i in $("#term_container div")
+	for container,i in $("#term_container > div")
 		table = $(container).$table({class : "table"})
 
 		termStr = "t#{i}"

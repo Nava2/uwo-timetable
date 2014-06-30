@@ -87,11 +87,11 @@
       <div class="row">
         <div class="col-md-6">
           <h4>Lectures:</h4>
-          <select id="lectureSelect" class="form-control" size="5" disabled></select>
+          <select id="lectureSelect" class="form-control" size="3" disabled></select>
         </div>
         <div class="col-md-6">
           <h4>Required Lab/Tut:</h4>
-          <select id="extraSelect" class="form-control" size="5" disabled></select>
+          <select id="extraSelect" class="form-control" size="3" disabled></select>
         </div>
       </div>
 
@@ -102,12 +102,16 @@
       </div>
 
       <div class="row" id="term_container">
-        <div class="col-md-6" id="t0_container">
-
+        <div class="col-md-6" >
+          <h4 class="termtitle">Semester 1</h4>
+          <div id="t0_container">
+          </div>
         </div>
 
-        <div class="col-md-6" id="t1_container">
-
+        <div class="col-md-6">
+          <h4 class="termtitle">Semester 2</h4>
+          <div id="t1_container">
+          </div>
         </div>
       </div>
 
@@ -122,10 +126,10 @@
       <script src="vendor/lodash-2.4.1.js"></script>
       <script src="vendor/typeahead.bundle.js"></script>
 
-      <script src="js/util.js"></script>
+      <script src="js/util/util.js"></script>
+      <script src="js/util/cache.js"></script>
+     
       <script src="js/base.js"></script>
-      <script src="js/cache.js"></script>
-
       <script src="js/index.js"></script>
     </body>
 </html>

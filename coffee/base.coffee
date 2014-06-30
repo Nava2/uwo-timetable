@@ -132,8 +132,10 @@ TimetableCreator.fetchClasses = (subject, withData) ->
 
 	fullquery = "https://query.yahooapis.com/v1/public/yql?q=" + encodedYql + "&format=json&callback="
 
-	$.getJSON(fullquery, null)
-		.done( (data) ->
+	$.ajax(fullquery, 
+		dataType: "json"
+		async: false
+		).done( (data) ->
 			div = data.query.results.div
 			## Build up the results using the ClassInstance 
 			withData (new TC.ClassInstance(t[0], t[1].tbody) for t in _.zip(div.h4, div.table))
