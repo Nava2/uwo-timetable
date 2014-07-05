@@ -21,36 +21,36 @@ substringMatcher = (depts) ->
 		cb matches
 
 cellColours = [
-		{ 
+		{
 			back: 'rgb(0, 191, 127)'
 			border: 'rgb(0, 127, 85)'
 		},
 		{
-			back: 'rgb(191, 181, 0)' 
+			back: 'rgb(191, 181, 0)'
 			border: 'rgb(127, 121, 0)'
 		},
 		{
-			back: 'rgb(191, 126, 0)' 
+			back: 'rgb(191, 126, 0)'
 			border: 'rgb(127, 84, 0)'
 		},
 		{
-			back: 'rgb(191, 67, 51)' 
+			back: 'rgb(191, 67, 51)'
 			border: 'rgb(127, 45, 34)'
 		},
 		{
-			back: 'rgb(191, 34, 163)' 
+			back: 'rgb(191, 34, 163)'
 			border: 'rgb(127, 23, 108)'
 		},
 		{
-			back: 'rgb(191, 126, 0)', 
+			back: 'rgb(191, 126, 0)',
 			border: 'rgb(127, 84, 0)'
 		},
 		{
-			back: 'rgb(111, 37, 191)', 
+			back: 'rgb(111, 37, 191)',
 			border: 'rgb(74, 25, 127)'
 		},
 		{
-			back: 'rgb(35, 83, 191)', 
+			back: 'rgb(35, 83, 191)',
 			border: 'rgb(23, 55, 127)'
 		}
 
@@ -65,13 +65,13 @@ class Schedule
 		Util.forAllTimes(
 				(hour, min, day) ->
 					ttable[day] ?= {}
-					ttable["#{hour}#{min}"] = {busy : false}
+					ttable[day][Util.simpleScheduleId(hour,min)] = {busy : false}
 			)
 
 	addClass: (component) ->
-		cellColour = cellColours[Math.floor(Math.random()*cellColours.length)]
-			
-		for time in component.times 
+		cellColour = cellColours[Math.floor(Math.random() * cellColours.length)]
+
+		for time in component.times
 
 			console.log "working with:", time
 
@@ -79,6 +79,19 @@ class Schedule
 
 			if rows == 0
 				throw new Exception("rows == 0")
+
+			getId = (simpleTime) -> Util.simpleScheduleId(simpleTime.hour, simpleTime.minute)
+
+			conflictIds = []
+			time.iterate((currTime) =>
+					id = getId(currTime)
+
+					if @_timetable[time.day][id].busy is true
+						conflictIds.push id
+				)
+
+			if conflictIds.length > 0
+				console.log "CONFLICTS: ", conflictIds
 
 			start = time.startTime
 
@@ -95,7 +108,7 @@ class Schedule
 				)
 
 			div = $(cell).$div()
-			
+
 			div.$h5("#{component.class.courseCode}")
 			div.$p("#{component.type} #{component.section}")
 
@@ -116,7 +129,7 @@ loadClassSelector = ->
 	( ->
 		selected =
 
-			dept 	: ( -> 
+			dept 	: ( ->
 					# regex to pull the dept code out of the val()
 					_reg = /([A-Z]+)\s+\-\s+/
 					->
@@ -145,9 +158,9 @@ loadClassSelector = ->
 				else
 					null
 
-		courseCache = new Util.LRUCache 5, (deptCode) -> 
+		courseCache = new Util.LRUCache 5, (deptCode) ->
 			currentClasses = []
-			TimetableCreator.fetchClasses(deptCode, (classes) -> 
+			TimetableCreator.fetchClasses(deptCode, (classes) ->
 					currentClasses = classes
 				)
 
@@ -172,13 +185,13 @@ loadClassSelector = ->
 				    .end() # clear all the options
 				select.prop('disabled', true)
 
-				currentClasses = courseCache.get selected.value 
+				currentClasses = courseCache.get selected.value
 				for clazz in currentClasses
 					$(select).$option(clazz.fullTitle, {value : clazz.courseCode})
 
 				select.prop('disabled', false)
 
-				
+
 			)
 
 		$("#classSelect").change (event) ->
@@ -236,7 +249,6 @@ loadTables = ->
 					$("##{termStr}_t#{hour}#{min}").$td({
 						id: "#{termStr}_t#{hour}#{min}_#{day}"
 					})
-					
 
 				, (hour, min) ->
 					# write the rows of the table:
